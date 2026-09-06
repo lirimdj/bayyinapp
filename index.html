@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bayyin - Islamic Companion</title>
+    <title>Bayyin Companion</title>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -274,7 +274,7 @@
 
         .arabic-text {
             font-family: 'Amiri', serif;
-            font-size: 1.4rem;
+            font-size: 1.15rem;
             text-align: right;
             direction: rtl;
             line-height: 2.2;
@@ -287,6 +287,11 @@
             cursor: pointer;
             border-radius: 12px;
             transition: background-color 0.3s ease;
+        }
+
+        .ayah-item.highlighted {
+            background-color: var(--accent-soft);
+            border: 1px solid var(--accent-gold);
         }
 
         .nav-container {
@@ -444,7 +449,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s ease-out;
+            transition: transform 0.1s ease-out;
             background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
         }
 
@@ -457,6 +462,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            transform-origin: bottom center;
         }
 
         .kaaba-element {
@@ -535,7 +541,7 @@
         <div class="card">
             <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 700; margin-bottom: 8px;">Ayah of Comfort</div>
             <div class="arabic-text" id="dailyAyahArabic">...</div>
-            <p id="dailyAyahTrans" style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem; font-style: italic;"></p>
+            <p id="dailyAyahTrans" style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem; font-style: italic; cursor: pointer;" onclick="goToDailyAyahInQuran()"></p>
             <button onclick="playDailyAyah()" style="margin-top: 14px; background: var(--accent-gold); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;">
                 Listen Recitation
             </button>
@@ -576,9 +582,9 @@
 
     <main id="qiblaView" class="view">
         <div class="card" style="text-align: center;">
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">Align Device Pointer with the Kaaba</div>
+            <div id="qiblaStatusText" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Tap calibrate to activate Qibla compass</div>
             <div class="compass-dial" id="compassDial">
-                <div class="qibla-line">
+                <div class="qibla-line" id="qiblaLine">
                     <div class="kaaba-element" title="Holy Kaaba"></div>
                 </div>
             </div>
@@ -757,6 +763,34 @@
                 surahSelect.value = currentSurahNum;
                 await loadSurah(false);
             }
+            if (currentAyahNum) {
+                scrollToAyah(currentSurahNum, currentAyahNum);
+            }
+        }
+
+        async function goToDailyAyahInQuran() {
+            const quranNavBtn = document.querySelectorAll('.nav-item')[1];
+            switchTab('quranView', quranNavBtn);
+
+            const surahSelect = document.getElementById('surahSelect');
+            if (surahSelect.value != dailySurahNum) {
+                surahSelect.value = dailySurahNum;
+                await loadSurah(false);
+            }
+            scrollToAyah(dailySurahNum, dailyAyahNumRef);
+        }
+
+        function scrollToAyah(surahNum, ayahNum) {
+            setTimeout(() => {
+                const ayahEl = document.getElementById(`ayah-${surahNum}-${ayahNum}`);
+                if (ayahEl) {
+                    ayahEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    ayahEl.classList.add('highlighted');
+                    setTimeout(() => {
+                        ayahEl.classList.remove('highlighted');
+                    }, 2500);
+                }
+            }, 300);
         }
 
         const comfortAyahs = [
@@ -799,13 +833,13 @@
                 const data = await res.json();
                 
                 document.getElementById('dailyAyahArabic').innerText = data.data[0].text;
-                document.getElementById('dailyAyahTrans').innerText = `"${data.data[1].text}" (Surah ${data.data[0].surah.englishName} ${ref})`;
+                document.getElementById('dailyAyahTrans').innerHTML = `"<span style="text-decoration: underline; cursor: pointer;">${data.data[1].text}</span>" (Surah ${data.data[0].surah.englishName} ${ref})`;
                 dailyAudioUrl = data.data[2].audio;
             } catch(e) {
                 dailySurahNum = 94;
                 dailyAyahNumRef = 5;
                 document.getElementById('dailyAyahArabic').innerText = "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا";
-                document.getElementById('dailyAyahTrans').innerText = `"For indeed, with hardship [will be] ease." (Surah Ash-Sharh 94:5)`;
+                document.getElementById('dailyAyahTrans').innerHTML = `"<span style="text-decoration: underline; cursor: pointer;">For indeed, with hardship [will be] ease.</span>" (Surah Ash-Sharh 94:5)`;
             }
         }
         function playDailyAyah() {
@@ -1003,12 +1037,88 @@
             document.getElementById('zakatOut').innerText = `${currency}${total.toFixed(2)}`;
         }
 
+        // --- Qibla Compass Logic ---
+        const KAABA_LAT = 21.4225;
+        const KAABA_LNG = 39.8262;
+        let qiblaAngle = 0;
+
+        function calculateQibla(lat, lng) {
+            const phiK = KAABA_LAT * Math.PI / 180.0;
+            const lambdaK = KAABA_LNG * Math.PI / 180.0;
+            const phi = lat * Math.PI / 180.0;
+            const lambda = lng * Math.PI / 180.0;
+
+            const numerator = Math.sin(lambdaK - lambda);
+            const denominator = Math.cos(phi) * Math.tan(phiK) - Math.sin(phi) * Math.cos(lambdaK - lambda);
+            let qibla = Math.atan2(numerator, denominator) * 180.0 / Math.PI;
+            return (qibla + 360) % 360;
+        }
+
         function enableCompass() {
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (e) => {
-                    let heading = e.webkitCompassHeading || Math.abs(e.alpha - 360);
-                    document.getElementById('compassDial').style.transform = `rotate(${-heading}deg)`;
-                }, true);
+            const statusEl = document.getElementById('qiblaStatusText');
+
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(response => {
+                        if (response === 'granted') {
+                            startCompassListening();
+                        } else {
+                            statusEl.innerText = "Compass permission denied.";
+                        }
+                    })
+                    .catch(() => {
+                        statusEl.innerText = "Compass permission request failed.";
+                    });
+            } else if ('ondeviceorientationabsolute' in window || 'ondeviceorientation' in window) {
+                startCompassListening();
+            } else {
+                statusEl.innerText = "Compass sensors not supported on this device.";
+            }
+        }
+
+        function startCompassListening() {
+            const statusEl = document.getElementById('qiblaStatusText');
+            statusEl.innerText = "Acquiring location...";
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        qiblaAngle = calculateQibla(userLat, userLng);
+                        statusEl.innerText = `Qibla direction: ${Math.round(qiblaAngle)}° from True North`;
+                        
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                    },
+                    (error) => {
+                        // Fallback to Makkah orientation relative to standard reference if GPS fails
+                        qiblaAngle = 136; 
+                        statusEl.innerText = "GPS unavailable. Using default heading.";
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                    },
+                    { timeout: 10000, maximumAge: 60000 }
+                );
+            } else {
+                qiblaAngle = 136;
+                statusEl.innerText = "Geolocation not supported. Using default.";
+                window.addEventListener('deviceorientation', handleOrientation, true);
+            }
+        }
+
+        function handleOrientation(e) {
+            let heading = null;
+            if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
+                heading = e.webkitCompassHeading;
+            } else if (e.alpha !== null) {
+                heading = 360 - e.alpha;
+            }
+
+            if (heading !== null) {
+                const rotation = qiblaAngle - heading;
+                const qiblaLine = document.getElementById('qiblaLine');
+                if (qiblaLine) {
+                    qiblaLine.style.transform = `rotate(${rotation}deg)`;
+                }
             }
         }
     </script>
