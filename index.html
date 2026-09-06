@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BayyinApp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #FAFAFD;
+            --bg-card: #FFFFFF;
+            --text-primary: #1E2022;
+            --text-secondary: #676D75;
+            --accent-gold: #D4AF37;
+            --accent-soft: #FFF9E6;
+            --border: #F0F0F5;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --nav-bg: rgba(255, 255, 255, 0.88);
+            --player-bg: #FFFFFF;
+            --target-red: #8B263E;
+            --book-border: #E6D5AC;
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #071310;
+            --bg-card: #0F221D;
+            --text-primary: #F3F4F6;
+            --text-secondary: #9CA3AF;
+            --accent-gold: #F4D06F;
+            --accent-soft: #14332B;
+            --border: #1B3D34;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            --nav-bg: rgba(15, 34, 29, 0.88);
+            --player-bg: #14332B;
+            --book-border: #2D5C50;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            transition: background-color 0.4s ease, color 0.4s ease;
+            padding-bottom: 140px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .header-title-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-app-logo {
+            width: 38px;
+            height: 38px;
+            background: radial-gradient(circle at 50% 30%, #163B32 0%, #0A221C 100%);
+            border: 1.5px solid var(--accent-gold);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header-app-logo .mini-crescent {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            box-shadow: inset -3px 1px 0 0 var(--accent-gold);
+            transform: rotate(-15deg);
+        }
+
+        .header-title {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--accent-gold);
+            letter-spacing: -0.5px;
+        }
+
+        .celestial-toggle {
+            background: var(--accent-soft);
+            border: 1px solid var(--border);
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .celestial-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            position: relative;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+        }
+
+        .celestial-icon::before {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            border-radius: 50%;
+            border: 2px dashed var(--accent-gold);
+            opacity: 0.8;
+            transition: opacity 0.4s;
+        }
+
+        [data-theme="dark"] .celestial-toggle { transform: rotate(360deg); }
+
+        [data-theme="dark"] .celestial-icon {
+            background: transparent;
+            box-shadow: inset -7px 2px 0 0 var(--accent-gold);
+            filter: drop-shadow(0 0 6px rgba(244, 208, 111, 0.4));
+        }
+
+        [data-theme="dark"] .celestial-icon::before { opacity: 0; }
+
+        .view {
+            display: none;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quran-book-container {
+            background: var(--bg-card);
+            border: 2px solid var(--book-border);
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            height: calc(100vh - 270px);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .quran-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .reciter-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .reciter-row > * {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .quran-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 6px;
+            scroll-behavior: smooth;
+        }
+
+        .quran-scroll-area::-webkit-scrollbar { width: 5px; }
+        .quran-scroll-area::-webkit-scrollbar-thumb {
+            background: var(--accent-gold);
+            border-radius: 10px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .arabic-text {
+            font-family: 'Amiri', serif;
+            font-size: 1.8rem;
+            text-align: right;
+            direction: rtl;
+            line-height: 2.3;
+            color: var(--text-primary);
+        }
+
+        .ayah-item {
+            padding: 12px 10px;
+            border-bottom: 1px dashed var(--border);
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background-color 0.3s ease;
+        }
+
+        .ayah-item.active-playing {
+            background-color: var(--accent-soft);
+            border-left: 4px solid var(--accent-gold);
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 480px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 20%;
+            transition: color 0.2s;
+        }
+
+        .nav-item svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .nav-item.active { color: var(--accent-gold); }
+
+        .audio-player-bar {
+            position: fixed;
+            bottom: 85px;
+            left: 50%;
+            transform: translateX(-50%) translateY(180px);
+            width: calc(100% - 40px);
+            max-width: 480px;
+            background: var(--player-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px 18px;
+            box-shadow: var(--shadow);
+            z-index: 95;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .audio-player-bar.visible { transform: translateX(-50%) translateY(0); }
+
+        .player-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-title-btn {
+            background: none;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            padding: 0;
+        }
+        .player-title-btn:hover #playerSurahTitle {
+            text-decoration: underline;
+        }
+
+        .play-btn {
+            background: var(--accent-gold);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-gold);
+            width: 0%;
+        }
+
+        .app-input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            outline: none;
+            font-size: 0.85rem;
+        }
+
+        .tasbih-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-gold), #B38F24);
+            border: 6px solid var(--bg-card);
+            color: white;
+            font-size: 3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: background 0.4s ease;
+        }
+
+        .tasbih-btn.target-reached {
+            background: linear-gradient(135deg, var(--target-red), #5C1928) !important;
+        }
+
+        .compass-dial {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            border: 4px solid var(--accent-gold);
+            margin: 20px auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease-out;
+            background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+        }
+
+        .qibla-line {
+            width: 3px;
+            height: 100px;
+            background: var(--accent-gold);
+            position: absolute;
+            top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .kaaba-element {
+            width: 26px;
+            height: 26px;
+            margin-top: -14px;
+            background: #111111;
+            border-radius: 3px;
+            border-top: 3px solid #D4AF37;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .kaaba-element::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 0; right: 0;
+            height: 1px;
+            background: #D4AF37;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title-container">
+            <div class="header-app-logo">
+                <div class="mini-crescent"></div>
+            </div>
+            <div>
+                <div class="header-title">BAYYIN</div>
+                <div id="liveClock" style="font-size: 0.75rem; color: var(--text-secondary);">--:--:--</div>
+            </div>
+        </div>
+        <button class="celestial-toggle" id="themeToggle" aria-label="Toggle Theme">
+            <div class="celestial-icon"></div>
+        </button>
+    </header>
+
+    <div class="audio-player-bar" id="audioPlayerBar">
+        <div class="player-info">
+            <button class="player-title-btn" onclick="jumpToCurrentAyahInQuran()" title="Go to Ayah in Quran">
+                <div id="playerSurahTitle" style="font-weight: 600; font-size: 0.85rem; color: var(--accent-gold);">Ayah Recitation</div>
+                <div id="playerTime" style="font-size: 0.75rem; color: var(--text-secondary);">00:00 / 00:00</div>
+            </button>
+            <button class="play-btn" id="masterPlayBtn" onclick="togglePlay()">▶</button>
+        </div>
+        <div class="progress-bar" onclick="seekAudio(event)">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <audio id="globalAudio"></audio>
+    </div>
+
+    <main id="homeView" class="view active">
+        <div class="card" style="background: linear-gradient(135deg, var(--accent-soft), var(--bg-card));">
+            <div id="hijriDate" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-gold);">Loading Hijri Date...</div>
+            <div id="gregorianDate" style="font-size: 0.75rem; color: var(--text-secondary);"></div>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--accent-gold);">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600;">Upcoming Event</div>
+            <div id="nextHolidayTitle" style="font-size: 1.1rem; font-weight: 700; margin-top: 4px; color: var(--accent-gold);">Ramadan 1448</div>
+            <div id="nextHolidayDays" style="font-size: 0.85rem; color: var(--text-primary); margin-top: 2px;">Calculating countdown...</div>
+        </div>
+
+        <div class="card">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 700; margin-bottom: 8px;">Ayah of Comfort</div>
+            <div class="arabic-text" id="dailyAyahArabic">...</div>
+            <p id="dailyAyahTrans" style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem; font-style: italic;"></p>
+            <button onclick="playDailyAyah()" style="margin-top: 14px; background: var(--accent-gold); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;">
+                Listen Recitation
+            </button>
+        </div>
+
+        <div class="card">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 700; margin-bottom: 8px;">Daily Reflection</div>
+            <p id="dailyHadithText" style="line-height: 1.6; font-size: 0.95rem;">"Actions are judged by intentions."</p>
+            <p style="margin-top: 8px; font-size: 0.8rem; color: var(--accent-gold);">— Prophet Muhammad (ﷺ)</p>
+        </div>
+    </main>
+
+    <main id="quranView" class="view">
+        <div class="quran-book-container">
+            <div class="quran-controls">
+                <select class="app-input" id="surahSelect" onchange="loadSurah()"></select>
+                <div class="reciter-row">
+                    <input type="text" id="reciterSearchInput" class="app-input" placeholder="Search reciter..." oninput="filterReciters()">
+                    <select class="app-input" id="reciterSelect" onchange="loadSurah()">
+                        </select>
+                </div>
+            </div>
+            <div class="quran-scroll-area" id="surahContent"></div>
+        </div>
+    </main>
+
+    <main id="tasbihView" class="view">
+        <div class="card" style="text-align: center;">
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <input type="text" id="dhikrName" placeholder="Dhikr Name" class="app-input" value="SubhanAllah">
+                <input type="number" id="dhikrTarget" placeholder="Target" class="app-input" value="33" style="width: 90px;" onchange="resetTasbih()">
+            </div>
+            <div class="tasbih-btn" id="tasbihCounterBtn" onclick="countTasbih()">0</div>
+            <button onclick="resetTasbih()" style="background: none; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 12px; cursor: pointer; margin-top: 10px;">Reset Counter</button>
+        </div>
+    </main>
+
+    <main id="qiblaView" class="view">
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Align Device Pointer with the Kaaba</div>
+            <div class="compass-dial" id="compassDial">
+                <div class="qibla-line">
+                    <div class="kaaba-element" title="Holy Kaaba"></div>
+                </div>
+            </div>
+            <button onclick="enableCompass()" style="background: var(--accent-gold); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer;">Calibrate Compass</button>
+        </div>
+    </main>
+
+    <main id="zakatView" class="view">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="font-size: 0.85rem; color: var(--accent-gold); font-weight: 700;">Zakat Calculator (2.5%)</div>
+                <select id="currencySelect" class="app-input" style="width: auto; padding: 4px 8px;" onchange="calcZakat()">
+                    <option value="€">EUR (€)</option>
+                    <option value="$">USD ($)</option>
+                    <option value="£">GBP (£)</option>
+                    <option value="CAD $">CAD ($)</option>
+                    <option value="﷼">SAR (﷼)</option>
+                </select>
+            </div>
+            <input type="number" id="zCash" placeholder="Cash / Bank Savings" class="app-input" style="margin-bottom: 10px;" oninput="calcZakat()">
+            <input type="number" id="zGold" placeholder="Gold & Investment Value" class="app-input" style="margin-bottom: 10px;" oninput="calcZakat()">
+            <div style="margin-top: 10px; font-size: 0.95rem; font-weight: 600;">Total Zakat Due: <span id="zakatOut" style="color: var(--accent-gold);">€0.00</span></div>
+        </div>
+    </main>
+
+    <nav class="nav-container">
+        <button class="nav-item active" onclick="switchTab('homeView', this)">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('quranView', this)">
+            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <span>Quran</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('tasbihView', this)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
+            <span>Tasbih</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('qiblaView', this)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+            <span>Qibla</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('zakatView', this)">
+            <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle></svg>
+            <span>Zakat</span>
+        </button>
+    </nav>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toLocaleTimeString();
+            document.getElementById('gregorianDate').innerText = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        async function fetchHijriDate() {
+            try {
+                const res = await fetch('https://api.aladhan.com/v1/gToH');
+                const data = await res.json();
+                const h = data.data.hijri;
+                document.getElementById('hijriDate').innerText = `${h.day} ${h.month.en} ${h.year} AH`;
+                document.getElementById('nextHolidayDays').innerText = "approx. 165 Days remaining";
+            } catch (e) {
+                document.getElementById('hijriDate').innerText = "1448 AH";
+            }
+        }
+        fetchHijriDate();
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const cur = document.documentElement.getAttribute('data-theme');
+            document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+        });
+
+        function switchTab(viewId, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            el.classList.add('active');
+        }
+
+        const audio = document.getElementById('globalAudio');
+        const playerBar = document.getElementById('audioPlayerBar');
+        const playBtn = document.getElementById('masterPlayBtn');
+        const progressFill = document.getElementById('progressFill');
+        let hideTimeout;
+
+        let currentSurahNum = 1;
+        let currentAyahNum = null;
+
+        function updateActiveAyahHighlight(surahNum, ayahNum) {
+            document.querySelectorAll('.ayah-item').forEach(el => el.classList.remove('active-playing'));
+            if (ayahNum) {
+                const targetEl = document.getElementById(`ayah-${surahNum}-${ayahNum}`);
+                if (targetEl) {
+                    targetEl.classList.add('active-playing');
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        function startAudio(url, title, surahNum = 1, ayahNum = null) {
+            clearTimeout(hideTimeout);
+            audio.src = url;
+            currentSurahNum = surahNum;
+            currentAyahNum = ayahNum;
+
+            updateActiveAyahHighlight(surahNum, ayahNum);
+
+            document.getElementById('playerSurahTitle').innerText = title;
+            playerBar.classList.add('visible');
+            audio.play().catch(() => {});
+            playBtn.innerText = '⏸';
+
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: title,
+                    artist: 'Nur Islamic Companion',
+                    album: 'Holy Quran Recitation'
+                });
+                navigator.mediaSession.setActionHandler('play', () => { audio.play(); playBtn.innerText = '⏸'; });
+                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); playBtn.innerText = '▶'; scheduleHide(); });
+            }
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play();
+                playBtn.innerText = '⏸';
+                clearTimeout(hideTimeout);
+            } else {
+                audio.pause();
+                playBtn.innerText = '▶';
+                scheduleHide();
+            }
+        }
+
+        function scheduleHide() {
+            hideTimeout = setTimeout(() => {
+                playerBar.classList.remove('visible');
+            }, 1500);
+        }
+
+        audio.ontimeupdate = () => {
+            if (audio.duration && audio.duration > 0) {
+                const pct = (audio.currentTime / audio.duration) * 100;
+                progressFill.style.width = pct + '%';
+                
+                const curM = Math.floor(audio.currentTime / 60);
+                const curS = Math.floor(audio.currentTime % 60).toString().padStart(2, '0');
+                const durM = Math.floor(audio.duration / 60);
+                const durS = Math.floor(audio.duration % 60).toString().padStart(2, '0');
+                
+                document.getElementById('playerTime').innerText = `${curM}:${curS} / ${durM}:${durS}`;
+            }
+        };
+
+        audio.onended = () => {
+            playBtn.innerText = '▶';
+            scheduleHide();
+        };
+
+        function seekAudio(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            if (audio.duration) {
+                audio.currentTime = pos * audio.duration;
+            }
+        }
+
+        async function jumpToCurrentAyahInQuran() {
+            const quranNavBtn = document.querySelectorAll('.nav-item')[1];
+            switchTab('quranView', quranNavBtn);
+
+            const surahSelect = document.getElementById('surahSelect');
+            if (surahSelect.value != currentSurahNum) {
+                surahSelect.value = currentSurahNum;
+                await loadSurah(false);
+            }
+
+            if (currentAyahNum) {
+                setTimeout(() => {
+                    updateActiveAyahHighlight(currentSurahNum, currentAyahNum);
+                }, 300);
+            }
+        }
+
+        const comfortAyahs = [
+            "94:5", 
+            "2:286", 
+            "39:53", 
+            "2:152", 
+            "13:28", 
+            "3:139", 
+            "65:3",  
+            "20:46"  
+        ];
+
+        let dailyAudioUrl = "";
+        let dailySurahNum = 94;
+        let dailyAyahNumRef = 5;
+
+        async function loadDailyContent() {
+            try {
+                const now = Date.now();
+                const twentyFourHours = 24 * 60 * 60 * 1000;
+                let storedIndex = localStorage.getItem('comfort_ayah_index');
+                let storedTimestamp = localStorage.getItem('comfort_ayah_time');
+
+                let index = 0;
+                if (storedIndex !== null && storedTimestamp !== null && (now - parseInt(storedTimestamp)) < twentyFourHours) {
+                    index = parseInt(storedIndex);
+                } else {
+                    index = Math.floor(Math.random() * comfortAyahs.length);
+                    localStorage.setItem('comfort_ayah_index', index);
+                    localStorage.setItem('comfort_ayah_time', now);
+                }
+
+                const ref = comfortAyahs[index];
+                const parts = ref.split(':');
+                dailySurahNum = parseInt(parts[0]);
+                dailyAyahNumRef = parseInt(parts[1]);
+
+                const res = await fetch(`https://api.alquran.cloud/v1/ayah/${ref}/editions/quran-uthmani,en.sahih,ar.alafasy`);
+                const data = await res.json();
+                
+                document.getElementById('dailyAyahArabic').innerText = data.data[0].text;
+                document.getElementById('dailyAyahTrans').innerText = `"${data.data[1].text}" (Surah ${data.data[0].surah.englishName} ${ref})`;
+                dailyAudioUrl = data.data[2].audio;
+            } catch(e) {
+                dailySurahNum = 94;
+                dailyAyahNumRef = 5;
+                document.getElementById('dailyAyahArabic').innerText = "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا";
+                document.getElementById('dailyAyahTrans').innerText = `"For indeed, with hardship [will be] ease." (Surah Ash-Sharh 94:5)`;
+            }
+        }
+        function playDailyAyah() {
+            if (dailyAudioUrl) {
+                startAudio(dailyAudioUrl, `Ayah of Comfort (Surah ${dailySurahNum}:${dailyAyahNumRef})`, dailySurahNum, dailyAyahNumRef);
+            }
+        }
+        loadDailyContent();
+
+        let allReciters = [];
+
+        async function initQuran() {
+            const surahSelect = document.getElementById('surahSelect');
+
+            try {
+                const surahRes = await fetch('https://api.alquran.cloud/v1/surah');
+                const surahData = await surahRes.json();
+                surahSelect.innerHTML = surahData.data.map(s => `<option value="${s.number}">${s.number}. ${s.englishName} (${s.name})</option>`).join('');
+
+                const reciterRes = await fetch('https://www.mp3quran.net/api/v3/reciters?language=eng');
+                const reciterData = await reciterRes.json();
+                
+                allReciters = [];
+                if (reciterData && reciterData.reciters) {
+                    reciterData.reciters.forEach(r => {
+                        const hafsMoshaf = r.moshaf.find(m => m.surah_list && m.surah_list.split(',').length > 100);
+                        if (hafsMoshaf) {
+                            let cleanName = r.name.replace(/\s*\(.*?\)/g, '').trim();
+                            allReciters.push({
+                                id: r.id,
+                                name: cleanName,
+                                server: hafsMoshaf.server
+                            });
+                        }
+                    });
+                }
+
+                if (allReciters.length === 0) {
+                    allReciters = [
+                        { id: 1, name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/' },
+                        { id: 93, name: 'Abdul Rahman Al-Sudais', server: 'https://server11.mp3quran.net/sds/' },
+                        { id: 37, name: 'Abdul Basit Abdul Samad', server: 'https://server7.mp3quran.net/basit/' }
+                    ];
+                }
+
+                renderReciterOptions(allReciters);
+                loadSurah();
+            } catch(e) {
+                allReciters = [
+                    { id: 1, name: 'Mishary Rashid Alafasy', server: 'https://server8.mp3quran.net/afs/' },
+                    { id: 93, name: 'Abdul Rahman Al-Sudais', server: 'https://server11.mp3quran.net/sds/' },
+                    { id: 37, name: 'Abdul Basit Abdul Samad', server: 'https://server7.mp3quran.net/basit/' }
+                ];
+                renderReciterOptions(allReciters);
+                loadSurah();
+            }
+        }
+
+        function renderReciterOptions(recitersList) {
+            const reciterSelect = document.getElementById('reciterSelect');
+            reciterSelect.innerHTML = recitersList.map(r => `<option value="${r.id}" data-server="${r.server}">${r.name}</option>`).join('');
+            
+            for (let i = 0; i < reciterSelect.options.length; i++) {
+                if (reciterSelect.options[i].text.toLowerCase().includes('mishary') || reciterSelect.options[i].text.toLowerCase().includes('alafasy')) {
+                    reciterSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        function filterReciters() {
+            const query = document.getElementById('reciterSearchInput').value.toLowerCase();
+            const filtered = allReciters.filter(r => r.name.toLowerCase().includes(query));
+            renderReciterOptions(filtered);
+            loadSurah();
+        }
+
+        async function loadSurah(resetScroll = true) {
+            const container = document.getElementById('surahContent');
+            const num = document.getElementById('surahSelect').value;
+            const reciterSelectEl = document.getElementById('reciterSelect');
+            const selectedOption = reciterSelectEl.options[reciterSelectEl.selectedIndex];
+            
+            if (!num || !selectedOption) return;
+            if (resetScroll) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center;">Loading Book Pages...</div>';
+            }
+            
+            try {
+                // Fetching verse text, English translation, and verse-by-verse audio simultaneously using reliable identifiers
+                const res = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/quran-uthmani,en.sahih,ar.alafasy`);
+                const data = await res.json();
+                
+                const surahName = data.data[0].englishName;
+                const serverBase = selectedOption.getAttribute('data-server') || 'https://server8.mp3quran.net/afs/';
+                const paddedNum = String(num).padStart(3, '0');
+                const fullSurahUrl = `${serverBase}${paddedNum}.mp3`;
+
+                let html = `
+                    <div style="text-align: center; background: var(--accent-soft); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+                        <h3 style="color: var(--accent-gold);">${surahName} - ${data.data[0].name}</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">${data.data[0].revelationType} • ${data.data[0].numberOfAyahs} Verses</p>
+                        <button onclick="startAudio('${fullSurahUrl}', '${surahName.replace(/'/g, "\\'")} (Full Surah)', ${num}, null)" style="margin-top: 10px; background: var(--accent-gold); color: white; border: none; padding: 6px 14px; border-radius: 12px; font-weight: 600; cursor: pointer;">Play Full Surah</button>
+                    </div>
+                `;
+
+                data.data[0].ayahs.forEach((a, i) => {
+                    const audioUrl = data.data[2].ayahs[i].audio;
+                    const ayahNum = a.numberInSurah;
+                    
+                    html += `
+                        <div id="ayah-${num}-${ayahNum}" class="ayah-item" onclick="startAudio('${audioUrl}', '${surahName.replace(/'/g, "\\'")} [Verse ${ayahNum}]', ${num}, ${ayahNum})">
+                            <div class="arabic-text">${a.text} ﴿${ayahNum}﴾</div>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">${data.data[1].ayahs[i].text}</p>
+                            <div style="font-size: 0.7rem; color: var(--accent-gold); margin-top: 4px; font-weight: 600;">▶ Play verse</div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                if (resetScroll) container.scrollTop = 0;
+
+                if (currentSurahNum == num && currentAyahNum) {
+                    updateActiveAyahHighlight(currentSurahNum, currentAyahNum);
+                }
+            } catch(e) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center;">Error loading verses. Check connection.</div>';
+            }
+        }
+        initQuran();
+
+        let tasbihCount = 0;
+        function countTasbih() {
+            const target = parseInt(document.getElementById('dhikrTarget').value) || 33;
+            const btn = document.getElementById('tasbihCounterBtn');
+
+            tasbihCount++;
+            btn.innerText = tasbihCount;
+
+            if (tasbihCount >= target) {
+                btn.classList.add('target-reached');
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
+            } else {
+                if (navigator.vibrate) navigator.vibrate(30);
+            }
+        }
+
+        function resetTasbih() {
+            tasbihCount = 0;
+            const btn = document.getElementById('tasbihCounterBtn');
+            btn.innerText = 0;
+            btn.classList.remove('target-reached');
+        }
+
+        function calcZakat() {
+            const currency = document.getElementById('currencySelect').value;
+            const cash = parseFloat(document.getElementById('zCash').value) || 0;
+            const gold = parseFloat(document.getElementById('zGold').value) || 0;
+            const total = (cash + gold) * 0.025;
+            document.getElementById('zakatOut').innerText = `${currency}${total.toFixed(2)}`;
+        }
+
+        function enableCompass() {
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (e) => {
+                    let heading = e.webkitCompassHeading || Math.abs(e.alpha - 360);
+                    document.getElementById('compassDial').style.transform = `rotate(${-heading}deg)`;
+                }, true);
+            }
+        }
+    </script>
+</body>
+</html>
