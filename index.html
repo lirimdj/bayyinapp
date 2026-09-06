@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BayyinApp</title>
+    <title>Bayyin App</title>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -50,6 +50,66 @@
             padding-bottom: 140px;
         }
 
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+        }
+
+        #splashScreen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-logo {
+            width: 72px;
+            height: 72px;
+            background: radial-gradient(circle at 50% 30%, #163B32 0%, #0A221C 100%);
+            border: 2px solid var(--accent-gold);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: pulseLogo 1.6s ease-in-out infinite alternate;
+        }
+
+        .splash-logo .mini-crescent {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            box-shadow: inset -5px 2px 0 0 var(--accent-gold);
+            transform: rotate(-15deg);
+        }
+
+        .splash-title {
+            margin-top: 18px;
+            font-weight: 800;
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+            letter-spacing: 2px;
+            animation: fadeInText 1s ease forwards;
+        }
+
+        @keyframes pulseLogo {
+            0% { transform: scale(0.95); opacity: 0.85; }
+            100% { transform: scale(1.05); opacity: 1; }
+        }
+
+        @keyframes fadeInText {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         header {
             display: flex;
             justify-content: space-between;
@@ -75,7 +135,6 @@
             border: 1.5px solid var(--accent-gold);
             border-radius: 10px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
@@ -423,6 +482,13 @@
 </head>
 <body>
 
+    <div id="splashScreen">
+        <div class="splash-logo">
+            <div class="mini-crescent"></div>
+        </div>
+        <div class="splash-title">BAYYIN</div>
+    </div>
+
     <header>
         <div class="header-title-container">
             <div class="header-app-logo">
@@ -488,8 +554,9 @@
                 <select class="app-input" id="surahSelect" onchange="loadSurah()"></select>
                 <div class="reciter-row">
                     <input type="text" id="reciterSearchInput" class="app-input" placeholder="Search reciter..." oninput="filterReciters()">
-                    <select class="app-input" id="reciterSelect" onchange="loadSurah()">
-                        </select>
+                    <select class="app-input" id="reciterSelect" onchange="onReciterChange()">
+                        <!-- Populated dynamically -->
+                    </select>
                 </div>
             </div>
             <div class="quran-scroll-area" id="surahContent"></div>
@@ -561,6 +628,14 @@
     </nav>
 
     <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                splash.classList.add('fade-out');
+                setTimeout(() => splash.remove(), 800);
+            }, 1400);
+        });
+
         function updateClock() {
             const now = new Date();
             document.getElementById('liveClock').innerText = now.toLocaleTimeString();
@@ -620,8 +695,8 @@
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: title,
-                    artist: 'Bayyin-App',
-                    album: 'Quran Recitation'
+                    artist: 'Bayyin Companion',
+                    album: 'Holy Quran Recitation'
                 });
                 navigator.mediaSession.setActionHandler('play', () => { audio.play(); playBtn.innerHTML = pauseIconSvg; });
                 navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); playBtn.innerHTML = playIconSvg; scheduleHide(); });
@@ -777,6 +852,18 @@
                 }
 
                 renderReciterOptions(allReciters);
+                
+                const savedReciterId = localStorage.getItem('selected_reciter_id');
+                if (savedReciterId) {
+                    const reciterSelect = document.getElementById('reciterSelect');
+                    for (let i = 0; i < reciterSelect.options.length; i++) {
+                        if (reciterSelect.options[i].value == savedReciterId) {
+                            reciterSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
                 loadSurah();
             } catch(e) {
                 allReciters = [
@@ -791,8 +878,29 @@
 
         function renderReciterOptions(recitersList) {
             const reciterSelect = document.getElementById('reciterSelect');
+            const currentSelectedVal = reciterSelect.value;
+            
             reciterSelect.innerHTML = recitersList.map(r => `<option value="${r.id}" data-server="${r.server}">${r.name}</option>`).join('');
             
+            if (currentSelectedVal) {
+                for (let i = 0; i < reciterSelect.options.length; i++) {
+                    if (reciterSelect.options[i].value == currentSelectedVal) {
+                        reciterSelect.selectedIndex = i;
+                        return;
+                    }
+                }
+            }
+
+            const savedReciterId = localStorage.getItem('selected_reciter_id');
+            if (savedReciterId) {
+                for (let i = 0; i < reciterSelect.options.length; i++) {
+                    if (reciterSelect.options[i].value == savedReciterId) {
+                        reciterSelect.selectedIndex = i;
+                        return;
+                    }
+                }
+            }
+
             for (let i = 0; i < reciterSelect.options.length; i++) {
                 if (reciterSelect.options[i].text.toLowerCase().includes('mishary') || reciterSelect.options[i].text.toLowerCase().includes('alafasy')) {
                     reciterSelect.selectedIndex = i;
@@ -805,6 +913,12 @@
             const query = document.getElementById('reciterSearchInput').value.toLowerCase();
             const filtered = allReciters.filter(r => r.name.toLowerCase().includes(query));
             renderReciterOptions(filtered);
+            loadSurah();
+        }
+
+        function onReciterChange() {
+            const reciterSelect = document.getElementById('reciterSelect');
+            localStorage.setItem('selected_reciter_id', reciterSelect.value);
             loadSurah();
         }
 
