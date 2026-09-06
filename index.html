@@ -230,12 +230,6 @@
             transition: background-color 0.3s ease;
         }
 
-        .ayah-item.active-playing {
-            background-color: var(--accent-soft);
-            border-left: 4px solid var(--accent-gold);
-            border-bottom: 1px solid transparent;
-        }
-
         .nav-container {
             position: fixed;
             bottom: 20px;
@@ -450,7 +444,9 @@
                 <div id="playerSurahTitle" style="font-weight: 600; font-size: 0.85rem; color: var(--accent-gold);">Ayah Recitation</div>
                 <div id="playerTime" style="font-size: 0.75rem; color: var(--text-secondary);">00:00 / 00:00</div>
             </button>
-            <button class="play-btn" id="masterPlayBtn" onclick="togglePlay()">▶</button>
+            <button class="play-btn" id="masterPlayBtn" onclick="togglePlay()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </button>
         </div>
         <div class="progress-bar" onclick="seekAudio(event)">
             <div class="progress-fill" id="progressFill"></div>
@@ -607,16 +603,8 @@
         let currentSurahNum = 1;
         let currentAyahNum = null;
 
-        function updateActiveAyahHighlight(surahNum, ayahNum) {
-            document.querySelectorAll('.ayah-item').forEach(el => el.classList.remove('active-playing'));
-            if (ayahNum) {
-                const targetEl = document.getElementById(`ayah-${surahNum}-${ayahNum}`);
-                if (targetEl) {
-                    targetEl.classList.add('active-playing');
-                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-        }
+        const playIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+        const pauseIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
 
         function startAudio(url, title, surahNum = 1, ayahNum = null) {
             clearTimeout(hideTimeout);
@@ -624,32 +612,30 @@
             currentSurahNum = surahNum;
             currentAyahNum = ayahNum;
 
-            updateActiveAyahHighlight(surahNum, ayahNum);
-
             document.getElementById('playerSurahTitle').innerText = title;
             playerBar.classList.add('visible');
             audio.play().catch(() => {});
-            playBtn.innerText = '⏸';
+            playBtn.innerHTML = pauseIconSvg;
 
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: title,
-                    artist: 'Nur Islamic Companion',
-                    album: 'Holy Quran Recitation'
+                    artist: 'Bayyin-App',
+                    album: 'Quran Recitation'
                 });
-                navigator.mediaSession.setActionHandler('play', () => { audio.play(); playBtn.innerText = '⏸'; });
-                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); playBtn.innerText = '▶'; scheduleHide(); });
+                navigator.mediaSession.setActionHandler('play', () => { audio.play(); playBtn.innerHTML = pauseIconSvg; });
+                navigator.mediaSession.setActionHandler('pause', () => { audio.pause(); playBtn.innerHTML = playIconSvg; scheduleHide(); });
             }
         }
 
         function togglePlay() {
             if (audio.paused) {
                 audio.play();
-                playBtn.innerText = '⏸';
+                playBtn.innerHTML = pauseIconSvg;
                 clearTimeout(hideTimeout);
             } else {
                 audio.pause();
-                playBtn.innerText = '▶';
+                playBtn.innerHTML = playIconSvg;
                 scheduleHide();
             }
         }
@@ -675,7 +661,7 @@
         };
 
         audio.onended = () => {
-            playBtn.innerText = '▶';
+            playBtn.innerHTML = playIconSvg;
             scheduleHide();
         };
 
@@ -695,12 +681,6 @@
             if (surahSelect.value != currentSurahNum) {
                 surahSelect.value = currentSurahNum;
                 await loadSurah(false);
-            }
-
-            if (currentAyahNum) {
-                setTimeout(() => {
-                    updateActiveAyahHighlight(currentSurahNum, currentAyahNum);
-                }, 300);
             }
         }
 
@@ -840,7 +820,6 @@
             }
             
             try {
-                // Fetching verse text, English translation, and verse-by-verse audio simultaneously using reliable identifiers
                 const res = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/quran-uthmani,en.sahih,ar.alafasy`);
                 const data = await res.json();
                 
@@ -865,16 +844,14 @@
                         <div id="ayah-${num}-${ayahNum}" class="ayah-item" onclick="startAudio('${audioUrl}', '${surahName.replace(/'/g, "\\'")} [Verse ${ayahNum}]', ${num}, ${ayahNum})">
                             <div class="arabic-text">${a.text} ﴿${ayahNum}﴾</div>
                             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">${data.data[1].ayahs[i].text}</p>
-                            <div style="font-size: 0.7rem; color: var(--accent-gold); margin-top: 4px; font-weight: 600;">▶ Play verse</div>
+                            <div style="font-size: 0.7rem; color: var(--accent-gold); margin-top: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Play verse
+                            </div>
                         </div>
                     `;
                 });
                 container.innerHTML = html;
                 if (resetScroll) container.scrollTop = 0;
-
-                if (currentSurahNum == num && currentAyahNum) {
-                    updateActiveAyahHighlight(currentSurahNum, currentAyahNum);
-                }
             } catch(e) {
                 container.innerHTML = '<div style="padding: 20px; text-align: center;">Error loading verses. Check connection.</div>';
             }
